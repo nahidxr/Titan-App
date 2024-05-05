@@ -14,24 +14,25 @@
         <a href="#" class="nav-link">
         <i class="fa fa-plus-circle"></i>
             <p>
-           TiTan Live
+           Titan Live
             <i class="fas fa-angle-left right"></i>
             </p>
         </a>
         <ul class="nav nav-treeview">
 
             <li class="nav-item">
-            <a href="{{ url('/dashboard_setting') }}" class="nav-link">
+            <a href="{{ url('/titan/view') }}" class="nav-link">
                 <i class="fas fa-angle-right nav-icon"></i>
-                <p>Add RTMP</p>
+                <p>Video Transcoding List</p>
             </a>
             </li>
             <li class="nav-item">
-            <a href="{{ url('/add_monitor') }}" class="nav-link">
+            <a href="{{ url('/titan/create') }}" class="nav-link">
                 <i class="fas fa-angle-right nav-icon"></i>
-                <p>Add Dashboard</p>
+                <p>Add Video Perameter</p>
             </a>
             </li>
+            
         </ul>
      </li>
 
