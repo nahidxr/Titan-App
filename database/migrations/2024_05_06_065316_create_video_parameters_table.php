@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('rtmp_url')->nullable();
             $table->integer('flag')->default(0);
             $table->integer('status')->default(0);
+            $table->integer('write_to_nginx')->default(0);
+            $table->integer('read_from_nginx')->default(0);
             $table->timestamps();
         });
     }

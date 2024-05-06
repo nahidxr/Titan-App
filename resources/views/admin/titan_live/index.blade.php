@@ -23,6 +23,7 @@
            <table class="table table-bordered">
             <thead>
                 <tr>
+                    <th>Name</th>
                     <th>Audio Bitrate</th>
                     <th>Video Bitrate</th>
                     <th>Action</th>
@@ -32,6 +33,7 @@
             <tbody>
                 @foreach ($videoParameters as $parameter)
                     <tr>
+                        <td>{{ $parameter->regulation_name }}</td>
                         <td>{{ $parameter->audio_bitrate }}</td>
                         <td>{{ $parameter->video_bitrate }}</td>
                         <td class="d-flex justify-content-center">

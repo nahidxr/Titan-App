@@ -15,6 +15,8 @@ class VideoParameter extends Model
         'rtmp_url',
         'flag',
         'status',
+        'write_to_nginx',
+        'read_from_nginx',
        
     ];
 }
