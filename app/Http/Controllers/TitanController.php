@@ -51,6 +51,9 @@ class TitanController extends Controller
     
             // Save the new record to the database
             $videoParameter->save();
+
+            //update nginx configuration file
+            $this->updateNginxConfig();
     
             // Redirect back with success message
             return redirect()->back()->with('message', 'Video parameter saved successfully!');
@@ -102,7 +105,7 @@ class TitanController extends Controller
             
             // Save the updated record to the database
             $videoParameter->save();
-            
+
             $this->updateNginxConfig();
 
             // Redirect back with success message
