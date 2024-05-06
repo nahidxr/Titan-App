@@ -380,10 +380,10 @@ public function updateNginxConfig()
                 // Update the write_to_nginx attribute
                 $parameter->write_to_nginx = 0;
                 $parameter->save();
-                
+
             } elseif ($parameter->status == 1 && $parameter->write_to_nginx == 0) {
                 // Construct the configuration line if status is 0
-                $newLine = "-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url\n";
+                $newLine = "\n-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url\n";
                 
                 // Add the new line to the string
                 $newLines .= $newLine;
