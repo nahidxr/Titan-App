@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('video_parameters', function (Blueprint $table) {
             $table->id();
             $table->integer('audio_bitrate');
+            $table->string('regulation_name');
             $table->integer('video_bitrate');
             $table->string('rtmp_url')->nullable();
             $table->integer('flag')->default(0);

@@ -31,6 +31,7 @@ class TitanController extends Controller
     {
         // Validate the incoming request data
         $request->validate([
+            'regulation_name' => 'required',
             'audio_rate' => 'required|numeric',
             'video_rate' => 'required|numeric',
             'status' => 'required',
@@ -44,6 +45,7 @@ class TitanController extends Controller
             $videoParameter->audio_bitrate = $request->audio_rate;
             $videoParameter->video_bitrate = $request->video_rate;
             $videoParameter->status = $request->status;
+            $videoParameter->regulation_name = $request->regulation_name;
             
             // You can set other attributes here as well if needed
     
@@ -71,6 +73,7 @@ class TitanController extends Controller
     {
         // Validate the incoming request data
         $request->validate([
+            'regulation_name' => 'required',
             'audio_bitrate' => 'required|numeric',
             'video_bitrate' => 'required|numeric',
             'status' => 'required',
@@ -85,6 +88,8 @@ class TitanController extends Controller
             $videoParameter->audio_bitrate = $request->audio_bitrate;
             $videoParameter->video_bitrate = $request->video_bitrate;
             $videoParameter->status = $request->status;
+            $videoParameter->regulation_name = $request->regulation_name;
+
 
             
             // Save the updated record to the database
@@ -167,15 +172,15 @@ class TitanController extends Controller
             foreach ($videoParameters as $parameter) {
                 $audioBitrate = $parameter->audio_bitrate . 'k'; // Add 'k' after audio bitrate
                 $videoBitrate = $parameter->video_bitrate . 'k'; // Add 'k' after video bitrate
-                $url = 'rtmp://localhost/hls/$name_low'; // Predefined URL
+                $url = $parameter->regulation_name;
                 
-                if ($parameter->status == 1) {
+                if ($parameter->status == 0) {
                     // Remove line from configuration file if status is 1
-                    $lineToRemove = "-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv $url\n";
+                    $lineToRemove = "-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$url\n";
                     $nginxConfig = str_replace($lineToRemove, '', $nginxConfig);
                 } else {
                     // Construct the configuration line if status is 0
-                    $newLine = "-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv $url\n";
+                    $newLine = "-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$url\n";
                 
                     // Insert the new line after the 'exec_push ffmpeg' line
                     $nginxConfig = substr_replace($nginxConfig, $newLine, $pos + strlen('exec_push ffmpeg -i rtmp://localhost/live/$name -async 1 -vsync -1') + 1, 0);

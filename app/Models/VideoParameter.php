@@ -9,6 +9,7 @@ class VideoParameter extends Model
 {
     protected $table = 'video_parameters';
     protected $fillable = [
+        'regulation_name',
         'audio_bitrate',
         'video_bitrate',
         'rtmp_url',

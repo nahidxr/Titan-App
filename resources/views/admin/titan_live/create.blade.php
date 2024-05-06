@@ -43,6 +43,12 @@
             <div class="card-body">
 
                 <div class="form-group row">
+                    <label for="regulation_name" class="col-sm-2 col-form-label">Regulation Name</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" name="regulation_name" id="regulation_name" value="" placeholder="Enter Audio Rate" style="width: 400px;" required autofocus autocomplete="off">
+                    </div>
+                </div>
+                <div class="form-group row">
                     <label for="audio_rate" class="col-sm-2 col-form-label">Audio Rate</label>
                     <div class="col-sm-10">
                         <input type="text" class="form-control" name="audio_rate" id="audio_rate" value="" placeholder="Enter Audio Rate" style="width: 400px;" required autofocus autocomplete="off">
@@ -55,7 +61,7 @@
                     </div>
                 </div>
                  <div class="form-group row">
-                    <label  for="user" class="col-sm-2 col-form-label">Status</label>
+                    <label  for="status" class="col-sm-2 col-form-label">Status</label>
                     <div class="col-sm-10">
                         <select name="status" class="form-control" style="width: 400px;">
                             <option value="">Select Status</option>
