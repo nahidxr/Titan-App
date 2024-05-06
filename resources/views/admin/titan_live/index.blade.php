@@ -26,6 +26,7 @@
                     <th>Name</th>
                     <th>Audio Bitrate</th>
                     <th>Video Bitrate</th>
+                    <th>Status</th>
                     <th>Action</th>
                     <!-- Add more table headers if needed -->
                 </tr>
@@ -36,6 +37,12 @@
                         <td>{{ $parameter->regulation_name }}</td>
                         <td>{{ $parameter->audio_bitrate }}</td>
                         <td>{{ $parameter->video_bitrate }}</td>
+                        <td>  @if ($parameter->status == 0)
+                        <span class="badge badge-danger mr-1">Inactive</span>
+                        @elseif ($parameter->status == 1)
+                            <span class="badge badge-success mr-1">Active</span>
+                        @endif
+                        </td>
                         <td class="d-flex justify-content-center">
                           <div class="btn-group" role="group">
                               <a href="{{ url("/titan/$parameter->id/edit") }}" class="btn btn-primary btn-sm">Update</a>

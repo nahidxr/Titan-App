@@ -84,6 +84,14 @@ class TitanController extends Controller
             // Find the video parameter by its ID
             $videoParameter = VideoParameter::findOrFail($id);
 
+              // Update status and write_to_nginx attributes
+              $videoParameter->status = 0;
+              $videoParameter->write_to_nginx = 1;
+              $videoParameter->save();
+  
+              // Call updateNginxConfig function
+              $this->updateNginxConfig();
+
             // Update the attributes with the validated data
             $videoParameter->audio_bitrate = $request->audio_bitrate;
             $videoParameter->video_bitrate = $request->video_bitrate;
@@ -94,6 +102,8 @@ class TitanController extends Controller
             
             // Save the updated record to the database
             $videoParameter->save();
+            
+            $this->updateNginxConfig();
 
             // Redirect back with success message
             return redirect()->back()->with('message', 'Video parameter updated successfully!');
@@ -107,6 +117,14 @@ class TitanController extends Controller
         try {
             // Find the video parameter by id
             $videoParameter = VideoParameter::findOrFail($id);
+             // Update status and write_to_nginx attributes
+            $videoParameter->status = 0;
+            $videoParameter->write_to_nginx = 1;
+            $videoParameter->save();
+
+            // Call updateNginxConfig function
+            $this->updateNginxConfig();
+           
 
             // Delete the video parameter
             $videoParameter->delete();
@@ -394,10 +412,6 @@ public function updateNginxConfig()
             }
         }
 
-        // Remove semicolon at the end if new lines are added
-        if (!empty($newLines)) {
-            $newLines = rtrim($newLines, "\n");
-        }
 
         // Insert the new lines after the 'exec_push ffmpeg' line
         $nginxConfig = substr_replace($nginxConfig, rtrim($newLines, "\n"), $pos + strlen('exec_push ffmpeg -i rtmp://localhost/live/$name -async 1 -vsync -1') + 1, 0);
@@ -405,13 +419,14 @@ public function updateNginxConfig()
         // Write the updated configuration back to the file
         File::put($nginxConfigPath, $nginxConfig);
 
+         // Restart Nginx server
+         exec("systemctl restart nginx");
+
         return "Nginx configuration updated successfully!";
     } else {
         return "Failed to find the 'exec_push ffmpeg' line in the Nginx configuration file.";
     }
 }
 
-
-    
 
 }

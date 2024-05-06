@@ -42,21 +42,21 @@
             <div class="form-group row">
                 <label for="regulation_name" class="col-sm-2 col-form-label">Regulation Name</label>
                 <div class="col-sm-10">
-                    <input type="text" class="form-control" name="regulation_name" id="regulation_name" value="{{ $videoParameter->regulation_name }}" placeholder="Enter Audio Rate" style="width: 400px;" required autofocus autocomplete="off">
+                    <input type="text" class="form-control" name="regulation_name" id="regulation_name" value="{{ $videoParameter->regulation_name }}" placeholder="Enter Audio Rate" style="width: 400px;" required autofocus autocomplete="off" >
                 </div>
             </div>
             <div class="form-group row">
                 <label for="audio_bitrate" class="col-sm-2 col-form-label">Audio Bitrate</label>
                 <div class="col-sm-10">
                     <input type="text" class="form-control" name="audio_bitrate" id="audio_bitrate"
-                        value="{{ $videoParameter->audio_bitrate }}" style="width: 400px;" required>
+                        value="{{ $videoParameter->audio_bitrate }}" style="width: 400px;" required >
                 </div>
             </div>
             <div class="form-group row">
                 <label for="video_bitrate" class="col-sm-2 col-form-label">Video Bitrate</label>
                 <div class="col-sm-10">
                     <input type="text" class="form-control" name="video_bitrate" id="video_bitrate"
-                        value="{{ $videoParameter->video_bitrate }}" style="width: 400px;" required>
+                        value="{{ $videoParameter->video_bitrate }}" style="width: 400px;" required >
                 </div>
             </div>
             <div class="form-group row">
