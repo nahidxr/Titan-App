@@ -10,16 +10,16 @@ class ScriptController extends Controller
     public function executeScript()
     {
 
-        $result = Process::run('sudo ');
-        return $result->output();
+        // exec('sudo systemctl restart nginx');
+        $output =  exec('sudo systemctl restart nginx');
+        // dd( $output);
 
 
-
-        // Path to the shell script
-        $scriptPath = storage_path('scripts/restart_nginx.sh');
+        // // Path to the shell script
+        // $scriptPath = storage_path('scripts/restart_nginx.sh');
     
-        // Execute the script
-        $output = shell_exec("bash $scriptPath 2>&1");
+        // // Execute the script
+        // $output = shell_exec("bash $scriptPath 2>&1");
 
         // dd( $output);
     

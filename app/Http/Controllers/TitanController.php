@@ -194,7 +194,7 @@ class TitanController extends Controller
             File::put($nginxConfigPath, $nginxConfig);
 
             // Restart Nginx server
-            exec("/usr/bin/systemctl restart nginx");
+            exec("systemctl reload nginx");
 
             return "Nginx configuration updated successfully!";
         } else {

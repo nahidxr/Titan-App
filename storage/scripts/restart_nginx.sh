@@ -1,4 +1,4 @@
 #!/bin/bash
 if ! systemctl is-active nginx >/dev/null ; then
-    systemctl start nginx
+    systemctl reload nginx
 fi

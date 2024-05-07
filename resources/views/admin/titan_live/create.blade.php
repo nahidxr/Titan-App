@@ -43,9 +43,9 @@
             <div class="card-body">
 
                 <div class="form-group row">
-                    <label for="regulation_name" class="col-sm-2 col-form-label">Regulation Name</label>
+                    <label for="regulation_name" class="col-sm-2 col-form-label"> Name</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" name="regulation_name" id="regulation_name" value="" placeholder="Enter Audio Rate" style="width: 400px;" required autofocus autocomplete="off">
+                        <input type="text" class="form-control" name="regulation_name" id="regulation_name" value="" placeholder="Enter Name" style="width: 400px;" required autofocus autocomplete="off">
                     </div>
                 </div>
                 <div class="form-group row">
