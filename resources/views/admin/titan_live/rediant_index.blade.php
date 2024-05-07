@@ -34,6 +34,7 @@
         src: src{{ $loop->iteration }},
         width: 400,
         height: 360,
+        autoplay: true,
         contentMetadata: {
           poster: [
             'maxresdefault.jpg'
