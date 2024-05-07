@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\VideoParameter;
 use Illuminate\Support\Facades\File;
 use App\Enums\Status;
+use App\Models\M3u8File;
 
 
 
@@ -141,295 +142,113 @@ class TitanController extends Controller
     }
 
 
-    // public function updateNginxConfig()
-    // {
-    //     // Fetch all video parameters from the database
-    //     $videoParameters = VideoParameter::all();
-
-    //     // Read Nginx configuration file
-    //     $nginxConfigPath = "/etc/nginx/nginx.conf";
-    //     $nginxConfig = File::get($nginxConfigPath);
-
-    //     // Find the position of the 'exec_push ffmpeg' line
-    //     $pos = strpos($nginxConfig, 'exec_push ffmpeg -i rtmp://localhost/live/$name -async 1 -vsync -1');
-
-    //     if ($pos !== false) {
-    //         // Iterate over each video parameter
-    //         foreach ($videoParameters as $parameter) {
-    //             $audioBitrate = $parameter->audio_bitrate . 'k'; // Add 'k' after audio bitrate
-    //             $videoBitrate = $parameter->video_bitrate . 'k'; // Add 'k' after video bitrate
-    //             $url = 'rtmp://localhost/hls/$name_low'; // Predefined URL
-            
-    //             // Construct the configuration line
-    //             $newLine = "-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv $url\n";
-            
-    //             // Insert the new line after the 'exec_push ffmpeg' line
-    //             $nginxConfig = substr_replace($nginxConfig, $newLine, $pos + strlen('exec_push ffmpeg -i rtmp://localhost/live/$name -async 1 -vsync -1') + 1, 0);
-    //         }
-            
-
-    //         // Write the updated configuration back to the file
-    //         File::put($nginxConfigPath, $nginxConfig);
-
-    //         return "Nginx configuration updated successfully!";
-    //     } else {
-    //         return "Failed to find the 'exec_push ffmpeg' line in the Nginx configuration file.";
-    //     }
-    // }
-    public function updateNginxConfig1()
+    public function updateNginxConfig()
     {
         // Fetch all video parameters from the database
         $videoParameters = VideoParameter::all();
-    
+
         // Read Nginx configuration file
         $nginxConfigPath = "/etc/nginx/nginx.conf";
         $nginxConfig = File::get($nginxConfigPath);
-    
+
         // Find the position of the 'exec_push ffmpeg' line
         $pos = strpos($nginxConfig, 'exec_push ffmpeg -i rtmp://localhost/live/$name -async 1 -vsync -1');
-    
+
         if ($pos !== false) {
+            $newLines = ''; // Initialize an empty string to store all the new lines
+            
             // Iterate over each video parameter
-            foreach ($videoParameters as $parameter) {
+            foreach ($videoParameters as $index => $parameter) {
                 $audioBitrate = $parameter->audio_bitrate . 'k'; // Add 'k' after audio bitrate
                 $videoBitrate = $parameter->video_bitrate . 'k'; // Add 'k' after video bitrate
                 $url = $parameter->regulation_name;
                 
-                if ($parameter->status == 0) {
+                if ($parameter->status == 0 && $parameter->write_to_nginx == 1) {
                     // Remove line from configuration file if status is 1
-                    $lineToRemove = "-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url\n";
-                    $nginxConfig = str_replace($lineToRemove, '', $nginxConfig);
-                } else { 
+                    while (($posToRemove = strpos($nginxConfig, "-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url\n")) !== false) {
+                        // Remove the line
+                        $nginxConfig = substr_replace($nginxConfig, '', $posToRemove, strlen("-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url\n"));
+                    }
+                    // Update the write_to_nginx attribute
+                    $parameter->write_to_nginx = 0;
+                    $parameter->save();
+
+                } elseif ($parameter->status == 1 && $parameter->write_to_nginx == 0) {
                     // Construct the configuration line if status is 0
-                    $newLine = "-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url\n";
-                
-                    // Insert the new line after the 'exec_push ffmpeg' line
-                    $nginxConfig = substr_replace($nginxConfig, $newLine, $pos + strlen('exec_push ffmpeg -i rtmp://localhost/live/$name -async 1 -vsync -1') + 1, 0);
+                    $newLine = "\n-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url\n";
+                    
+                    // Add the new line to the string
+                    $newLines .= $newLine;
+
+                    // Update the write_to_nginx attribute
+                    $parameter->write_to_nginx = 1;
+                    $parameter->save();
                 }
             }
-    
+
+
+            // Insert the new lines after the 'exec_push ffmpeg' line
+            $nginxConfig = substr_replace($nginxConfig, rtrim($newLines, "\n"), $pos + strlen('exec_push ffmpeg -i rtmp://localhost/live/$name -async 1 -vsync -1') + 1, 0);
+
             // Write the updated configuration back to the file
             File::put($nginxConfigPath, $nginxConfig);
-    
+
+            // Restart Nginx server
+            exec("/usr/bin/systemctl restart nginx");
+
             return "Nginx configuration updated successfully!";
         } else {
             return "Failed to find the 'exec_push ffmpeg' line in the Nginx configuration file.";
         }
     }
-    public function updateNginxConfig2()
-{
-    // Fetch all video parameters from the database
-    $videoParameters = VideoParameter::all();
 
-    // Read Nginx configuration file
-    $nginxConfigPath = "/etc/nginx/nginx.conf";
-    $nginxConfig = File::get($nginxConfigPath);
+    public function titan_rediant()
+    {
+        //fetch stream file from mnt/hls
+          $this->getM3U8Files();
+        // Fetch all M3U8 files using the model
+        $m3u8Files = M3u8File::all();
+    
+        // Check if there are any M3U8 files
+        if ($m3u8Files->isEmpty()) {
+            return "No M3U8 files found.";
+        }
+    
+        // Return the view with the M3U8 files
+        return view('admin.titan_live.rediant_index', ['m3u8Files' => $m3u8Files]);
+    }
 
-    // Find the position of the 'exec_push ffmpeg' line
-    $pos = strpos($nginxConfig, 'exec_push ffmpeg -i rtmp://localhost/live/$name -async 1 -vsync -1');
+    public function getM3U8Files()
+    {
+        // Directory where the M3U8 files are located
+        $directory = '/mnt/hls';
 
-    if ($pos !== false) {
-        $newLines = ''; // Initialize an empty string to store all the new lines
-        
-        // Iterate over each video parameter
-        foreach ($videoParameters as $index => $parameter) {
-            $audioBitrate = $parameter->audio_bitrate . 'k'; // Add 'k' after audio bitrate
-            $videoBitrate = $parameter->video_bitrate . 'k'; // Add 'k' after video bitrate
-            $url = $parameter->regulation_name;
-            
-            if ($parameter->status == 0) {
-                // Remove line from configuration file if status is 1
-                $lineToRemove = "-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url\n";
-                $nginxConfig = str_replace($lineToRemove, '', $nginxConfig);
-            } else { 
-                // Construct the configuration line if status is 0
-                $newLine = "-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url";
-                
-                // Add the new line to the string
-                $newLines .= $newLine;
-                
-                // Add semicolon at the end of the last line
-                if ($index === count($videoParameters) - 1) {
-                    $newLines .= ";";
+        // Check if the directory exists
+        if (!is_dir($directory)) {
+            return "Directory not found: $directory";
+        }
+
+        // Scan the directory for M3U8 files
+        $m3u8Files = [];
+        $files = scandir($directory);
+        foreach ($files as $file) {
+            // Filter out files with the .m3u8 extension
+            if (pathinfo($file, PATHINFO_EXTENSION) === 'm3u8') {
+                // Check if the file already exists in the database
+                if (!M3u8File::where('filename', $file)->exists()) {
+                    // Create a new M3u8File record
+                    $m3u8File = new M3u8File();
+                    $m3u8File->filename = $file;
+                    $m3u8File->save();
                 }
-                
-                $newLines .= "\n";
+                $m3u8Files[] = $file;
             }
         }
 
-        // Insert the new lines after the 'exec_push ffmpeg' line
-        $nginxConfig = substr_replace($nginxConfig, rtrim($newLines, "\n"), $pos + strlen('exec_push ffmpeg -i rtmp://localhost/live/$name -async 1 -vsync -1') + 1, 0);
-
-        // Write the updated configuration back to the file
-        File::put($nginxConfigPath, $nginxConfig);
-
-        return "Nginx configuration updated successfully!";
-    } else {
-        return "Failed to find the 'exec_push ffmpeg' line in the Nginx configuration file.";
-    }
+        // Return the list of M3U8 files
+        return $m3u8Files;
 }
-public function updateNginxConfig4()
-{
-    // Fetch all video parameters from the database
-    $videoParameters = VideoParameter::all();
 
-    // Read Nginx configuration file
-    $nginxConfigPath = "/etc/nginx/nginx.conf";
-    $nginxConfig = File::get($nginxConfigPath);
-
-    // Find the position of the 'exec_push ffmpeg' line
-    $pos = strpos($nginxConfig, 'exec_push ffmpeg -i rtmp://localhost/live/$name -async 1 -vsync -1');
-
-    if ($pos !== false) {
-        $newLines = ''; // Initialize an empty string to store all the new lines
-        
-        // Iterate over each video parameter
-        foreach ($videoParameters as $index => $parameter) {
-            $audioBitrate = $parameter->audio_bitrate . 'k'; // Add 'k' after audio bitrate
-            $videoBitrate = $parameter->video_bitrate . 'k'; // Add 'k' after video bitrate
-            $url = $parameter->regulation_name;
-            
-            if ($parameter->status == 0) {
-                // Remove line from configuration file if status is 1
-                while (($posToRemove = strpos($nginxConfig, "-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url\n")) !== false) {
-                    // Remove the line
-                    $nginxConfig = substr_replace($nginxConfig, '', $posToRemove, strlen("-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url\n"));
-                }
-            } else { 
-                // Construct the configuration line if status is 0
-                $newLine = "-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url\n";
-                
-                // Add the new line to the string
-                $newLines .= $newLine;
-                
-                // Add semicolon at the end of the last line
-                if ($index === count($videoParameters) - 1) {
-                    $newLines .= ";";
-                }
-                
-            }
-        }
-
-        // Insert the new lines after the 'exec_push ffmpeg' line
-        $nginxConfig = substr_replace($nginxConfig, rtrim($newLines, "\n"), $pos + strlen('exec_push ffmpeg -i rtmp://localhost/live/$name -async 1 -vsync -1') + 1, 0);
-
-        // Write the updated configuration back to the file
-        File::put($nginxConfigPath, $nginxConfig);
-
-        return "Nginx configuration updated successfully!";
-    } else {
-        return "Failed to find the 'exec_push ffmpeg' line in the Nginx configuration file.";
-    }
-}
-public function updateNginxConfig5()
-{
-    // Fetch all video parameters from the database
-    $videoParameters = VideoParameter::all();
-
-    // Read Nginx configuration file
-    $nginxConfigPath = "/etc/nginx/nginx.conf";
-    $nginxConfig = File::get($nginxConfigPath);
-
-    // Find the position of the 'exec_push ffmpeg' line
-    $pos = strpos($nginxConfig, 'exec_push ffmpeg -i rtmp://localhost/live/$name -async 1 -vsync -1');
-
-    if ($pos !== false) {
-        $newLines = ''; // Initialize an empty string to store all the new lines
-        
-        // Iterate over each video parameter
-        foreach ($videoParameters as $index => $parameter) {
-            $audioBitrate = $parameter->audio_bitrate . 'k'; // Add 'k' after audio bitrate
-            $videoBitrate = $parameter->video_bitrate . 'k'; // Add 'k' after video bitrate
-            $url = $parameter->regulation_name;
-            
-            if ($parameter->status == 0) {
-                // Remove line from configuration file if status is 1
-                while (($posToRemove = strpos($nginxConfig, "-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url\n")) !== false) {
-                    // Remove the line
-                    $nginxConfig = substr_replace($nginxConfig, '', $posToRemove, strlen("-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url\n"));
-                }
-            } else { 
-                // Construct the configuration line if status is 0
-                $newLine = "-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url\n";
-                
-                // Add the new line to the string
-                $newLines .= $newLine;
-            }
-        }
-
-        // Add semicolon at the end of the last line
-        $newLines = rtrim($newLines, "\n") . ';';
-
-        // Insert the new lines after the 'exec_push ffmpeg' line
-        $nginxConfig = substr_replace($nginxConfig, rtrim($newLines, "\n"), $pos + strlen('exec_push ffmpeg -i rtmp://localhost/live/$name -async 1 -vsync -1') + 1, 0);
-
-        // Write the updated configuration back to the file
-        File::put($nginxConfigPath, $nginxConfig);
-
-        return "Nginx configuration updated successfully!";
-    } else {
-        return "Failed to find the 'exec_push ffmpeg' line in the Nginx configuration file.";
-    }
-}
-public function updateNginxConfig()
-{
-    // Fetch all video parameters from the database
-    $videoParameters = VideoParameter::all();
-
-    // Read Nginx configuration file
-    $nginxConfigPath = "/etc/nginx/nginx.conf";
-    $nginxConfig = File::get($nginxConfigPath);
-
-    // Find the position of the 'exec_push ffmpeg' line
-    $pos = strpos($nginxConfig, 'exec_push ffmpeg -i rtmp://localhost/live/$name -async 1 -vsync -1');
-
-    if ($pos !== false) {
-        $newLines = ''; // Initialize an empty string to store all the new lines
-        
-        // Iterate over each video parameter
-        foreach ($videoParameters as $index => $parameter) {
-            $audioBitrate = $parameter->audio_bitrate . 'k'; // Add 'k' after audio bitrate
-            $videoBitrate = $parameter->video_bitrate . 'k'; // Add 'k' after video bitrate
-            $url = $parameter->regulation_name;
-            
-            if ($parameter->status == 0 && $parameter->write_to_nginx == 1) {
-                // Remove line from configuration file if status is 1
-                while (($posToRemove = strpos($nginxConfig, "-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url\n")) !== false) {
-                    // Remove the line
-                    $nginxConfig = substr_replace($nginxConfig, '', $posToRemove, strlen("-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url\n"));
-                }
-                // Update the write_to_nginx attribute
-                $parameter->write_to_nginx = 0;
-                $parameter->save();
-
-            } elseif ($parameter->status == 1 && $parameter->write_to_nginx == 0) {
-                // Construct the configuration line if status is 0
-                $newLine = "\n-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url\n";
-                
-                // Add the new line to the string
-                $newLines .= $newLine;
-
-                // Update the write_to_nginx attribute
-                $parameter->write_to_nginx = 1;
-                $parameter->save();
-            }
-        }
-
-
-        // Insert the new lines after the 'exec_push ffmpeg' line
-        $nginxConfig = substr_replace($nginxConfig, rtrim($newLines, "\n"), $pos + strlen('exec_push ffmpeg -i rtmp://localhost/live/$name -async 1 -vsync -1') + 1, 0);
-
-        // Write the updated configuration back to the file
-        File::put($nginxConfigPath, $nginxConfig);
-
-         // Restart Nginx server
-         exec("systemctl restart nginx");
-
-        return "Nginx configuration updated successfully!";
-    } else {
-        return "Failed to find the 'exec_push ffmpeg' line in the Nginx configuration file.";
-    }
-}
 
 
 }

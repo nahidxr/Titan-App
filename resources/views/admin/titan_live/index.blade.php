@@ -46,7 +46,7 @@
                         <td class="d-flex justify-content-center">
                           <div class="btn-group" role="group">
                               <a href="{{ url("/titan/$parameter->id/edit") }}" class="btn btn-primary btn-sm">Update</a>
-                              <form action="{{ url("/titan/$parameter->id") }}" method="POST" onsubmit="return confirm('Do you really want to delete this category?');">
+                              <form action="{{ url("/titan/$parameter->id") }}" method="POST" onsubmit="return confirm('Do you really want to delete this Video perameter?');">
                                   @csrf
                                   @method('delete')
                                   <input type="submit" value="Delete" class="btn btn-danger btn-sm ml-1">
@@ -65,4 +65,6 @@
         @endif
     </div>
 </div>
+
+
 @endsection
