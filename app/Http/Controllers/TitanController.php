@@ -158,33 +158,63 @@ class TitanController extends Controller
             $newLines = ''; // Initialize an empty string to store all the new lines
             
             // Iterate over each video parameter
+            // foreach ($videoParameters as $index => $parameter) {
+            //     $audioBitrate = $parameter->audio_bitrate . 'k'; // Add 'k' after audio bitrate
+            //     $videoBitrate = $parameter->video_bitrate . 'k'; // Add 'k' after video bitrate
+            //     $url = $parameter->regulation_name;
+                
+            //     if ($parameter->status == 0 && $parameter->write_to_nginx == 1) {
+            //         // Remove line from configuration file if status is 1
+            //         while (($posToRemove = strpos($nginxConfig, "-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url\n")) !== false) {
+            //             // Remove the line
+            //             $nginxConfig = substr_replace($nginxConfig, '', $posToRemove, strlen("-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url\n"));
+            //         }
+            //         // Update the write_to_nginx attribute
+            //         $parameter->write_to_nginx = 0;
+            //         $parameter->save();
+
+            //     } elseif ($parameter->status == 1 && $parameter->write_to_nginx == 0) {
+            //         // Construct the configuration line if status is 0
+            //         $newLine = "\n-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url\n";
+                    
+            //         // Add the new line to the string
+            //         $newLines .= $newLine;
+
+            //         // Update the write_to_nginx attribute
+            //         $parameter->write_to_nginx = 1;
+            //         $parameter->save();
+            //     }
+            // }
+            
             foreach ($videoParameters as $index => $parameter) {
                 $audioBitrate = $parameter->audio_bitrate . 'k'; // Add 'k' after audio bitrate
                 $videoBitrate = $parameter->video_bitrate . 'k'; // Add 'k' after video bitrate
                 $url = $parameter->regulation_name;
-                
+                            
                 if ($parameter->status == 0 && $parameter->write_to_nginx == 1) {
                     // Remove line from configuration file if status is 1
-                    while (($posToRemove = strpos($nginxConfig, "-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url\n")) !== false) {
+                    while (($posToRemove = strpos($nginxConfig, "-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/\$name_" . $url . "\n")) !== false) {
                         // Remove the line
-                        $nginxConfig = substr_replace($nginxConfig, '', $posToRemove, strlen("-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url\n"));
+                        $nginxConfig = substr_replace($nginxConfig, '', $posToRemove, strlen("-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/\$name_" . $url . "\n"));
                     }
                     // Update the write_to_nginx attribute
                     $parameter->write_to_nginx = 0;
                     $parameter->save();
-
+            
                 } elseif ($parameter->status == 1 && $parameter->write_to_nginx == 0) {
                     // Construct the configuration line if status is 0
-                    $newLine = "\n-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url\n";
-                    
+                    $newLine = "\n-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/\$name_" . $url . "\n";
+                                
                     // Add the new line to the string
                     $newLines .= $newLine;
-
+            
                     // Update the write_to_nginx attribute
                     $parameter->write_to_nginx = 1;
                     $parameter->save();
                 }
             }
+            
+            
 
 
             // Insert the new lines after the 'exec_push ffmpeg' line
