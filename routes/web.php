@@ -33,3 +33,5 @@ Route::get('/titan/updateNginxConfig',[TitanController::class,'updateNginxConfig
 Route::get('/titan/rediant',[TitanController::class,'titan_rediant']);
 Route::get('/titan/mnt',[TitanController::class,'getM3U8Files']);
 Route::get('/titan/execute-script',[ScriptController::class,'executeScript']);
+
+Route::get('/titan/my_view',[TitanController::class,'titan_index']);

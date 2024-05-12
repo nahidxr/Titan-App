@@ -60,12 +60,6 @@
                         <input type="text" class="form-control" name="video_rate" id="video_rate" value="" placeholder="Enter Video Rate" style="width: 400px;" required autocomplete="off">
                     </div>
                 </div>
-                <div class="form-group row">
-                    <label for="video_rate" class="col-sm-2 col-form-label">Scale</label>
-                    <div class="col-sm-10">
-                        <input type="text" class="form-control" name="video_rate" id="video_rate" value="" placeholder="Enter Video Rate" style="width: 400px;" required autocomplete="off">
-                    </div>
-                </div>
                  <div class="form-group row">
                     <label  for="status" class="col-sm-2 col-form-label">Status</label>
                     <div class="col-sm-10">

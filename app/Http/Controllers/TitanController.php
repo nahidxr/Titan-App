@@ -142,6 +142,8 @@ class TitanController extends Controller
     }
 
 
+
+
     public function updateNginxConfig()
     {
         // Fetch all video parameters from the database
@@ -158,34 +160,7 @@ class TitanController extends Controller
             $newLines = ''; // Initialize an empty string to store all the new lines
             
             // Iterate over each video parameter
-            // foreach ($videoParameters as $index => $parameter) {
-            //     $audioBitrate = $parameter->audio_bitrate . 'k'; // Add 'k' after audio bitrate
-            //     $videoBitrate = $parameter->video_bitrate . 'k'; // Add 'k' after video bitrate
-            //     $url = $parameter->regulation_name;
-                
-            //     if ($parameter->status == 0 && $parameter->write_to_nginx == 1) {
-            //         // Remove line from configuration file if status is 1
-            //         while (($posToRemove = strpos($nginxConfig, "-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url\n")) !== false) {
-            //             // Remove the line
-            //             $nginxConfig = substr_replace($nginxConfig, '', $posToRemove, strlen("-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url\n"));
-            //         }
-            //         // Update the write_to_nginx attribute
-            //         $parameter->write_to_nginx = 0;
-            //         $parameter->save();
 
-            //     } elseif ($parameter->status == 1 && $parameter->write_to_nginx == 0) {
-            //         // Construct the configuration line if status is 0
-            //         $newLine = "\n-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/$$url\n";
-                    
-            //         // Add the new line to the string
-            //         $newLines .= $newLine;
-
-            //         // Update the write_to_nginx attribute
-            //         $parameter->write_to_nginx = 1;
-            //         $parameter->save();
-            //     }
-            // }
-            
             foreach ($videoParameters as $index => $parameter) {
                 $audioBitrate = $parameter->audio_bitrate . 'k'; // Add 'k' after audio bitrate
                 $videoBitrate = $parameter->video_bitrate . 'k'; // Add 'k' after video bitrate
@@ -224,13 +199,95 @@ class TitanController extends Controller
             File::put($nginxConfigPath, $nginxConfig);
 
             // Restart Nginx server
-            // exec("systemctl reload nginx");
+            exec("systemctl reload nginx");
 
             return "Nginx configuration updated successfully!";
         } else {
             return "Failed to find the 'exec_push ffmpeg' line in the Nginx configuration file.";
         }
     }
+
+
+
+    // public function updateNginxConfig()
+    // {
+    //     // Fetch all video parameters from the database
+    //     $videoParameters = VideoParameter::all();
+
+    //     // Read Nginx configuration file
+    //     $nginxConfigPath = "/etc/nginx/nginx.conf";
+    //     $nginxConfig = File::get($nginxConfigPath);
+
+    //     // Find the position of the 'rtmp {' block
+    //     $posRtmpBlock = strpos($nginxConfig, 'rtmp {');
+
+    //     if ($posRtmpBlock !== false) {
+    //         // Find the position of 'server {' within the 'rtmp {' block
+    //         $posServerBlock = strpos($nginxConfig, 'server {', $posRtmpBlock);
+
+    //         // Check if 'server {' exists
+    //         if ($posServerBlock !== false) {
+    //             // Add the 'listen' directive after 'server {'
+    //             $port = 1935; // Replace with your desired port number
+    //             $newLines = "\n listen $port;\n";
+
+    //             // Calculate the position to insert the new lines
+    //             // Here we add the length of 'server {' to find the position after 'server {'
+    //             $insertPos = $posServerBlock + strlen('server {');
+
+    //             // Iterate over each video parameter
+    //             foreach ($videoParameters as $index => $parameter) {
+    //                 $audioBitrate = $parameter->audio_bitrate . 'k'; // Add 'k' after audio bitrate
+    //                 $videoBitrate = $parameter->video_bitrate . 'k'; // Add 'k' after video bitrate
+    //                 $url = $parameter->regulation_name;
+                    
+    //                 if ($parameter->status == 0 && $parameter->write_to_nginx == 1) {
+    //                     // Remove line from configuration file if status is 1
+    //                     while (($posToRemove = strpos($nginxConfig, "-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/\$name_" . $url . "\n")) !== false) {
+    //                         // Remove the line
+    //                         $nginxConfig = substr_replace($nginxConfig, '', $posToRemove, strlen("-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/\$name_" . $url . "\n"));
+    //                     }
+    //                     // Update the write_to_nginx attribute
+    //                     $parameter->write_to_nginx = 0;
+    //                     $parameter->save();
+                
+    //                 } elseif ($parameter->status == 1 && $parameter->write_to_nginx == 0) {
+    //                     // Construct the configuration line if status is 0
+    //                     $newLine = "\n-c:a aac -strict -2 -b:a $audioBitrate -c:v libx264 -vf scale=-2:240 -g 48 -keyint_min 48 -sc_threshold 0 -bf 3 -b_strategy 2 -b:v $videoBitrate -f flv rtmp://localhost/hls/\$name_" . $url . "\n";
+                                    
+    //                     // Add the new line to the string
+    //                     $newLines .= $newLine;
+                
+    //                     // Update the write_to_nginx attribute
+    //                     $parameter->write_to_nginx = 1;
+    //                     $parameter->save();
+    //                 }
+    //             }
+                
+    //             // Insert the new lines after the 'server {' block
+    //             $nginxConfig = substr_replace($nginxConfig, rtrim($newLines, "\n"), $insertPos, 0);
+
+    //             // Write the updated configuration back to the file
+    //             File::put($nginxConfigPath, $nginxConfig);
+
+    //             // Restart Nginx server
+    //             // exec("systemctl reload nginx");
+
+    //             return "Nginx configuration updated successfully!";
+    //         } else {
+    //             // Handle the case where 'server {' is not found
+    //             return "Failed to find the 'server {' block in the Nginx configuration file.";
+    //         }
+    //     } else {
+    //         // Handle the case where 'rtmp {' is not found
+    //         return "Failed to find the 'rtmp {' block in the Nginx configuration file.";
+    //     }
+    // }
+
+   
+
+    
+
 
     public function titan_rediant()
     {
@@ -277,7 +334,13 @@ class TitanController extends Controller
 
         // Return the list of M3U8 files
         return $m3u8Files;
-}
+    }
+
+    public function titan_index(){
+
+        return view('admin.titan_live.titan_index');
+
+    }
 
 
 
